@@ -53,8 +53,8 @@ URL: https://code.google.com/p/io-2012-slides
       <ul>
         <h3>Co będzie trzeba zrobić</h3>
         <li>Dodanie middlewara i aplikacji w settings.py</li>
-        <li>Skorzystanie z funkcji authenticated</li>
         <li>Użycie wbudowanego modelu użytkowników</li>
+        <li>Skorzystanie z funkcji authenticated</li>
         <li>Użycie tokenu 'Cross-site request forgery' w formularzu</li>
         <br>
         <h3>Dodatkowo:</h3>
@@ -102,26 +102,103 @@ URL: https://code.google.com/p/io-2012-slides
     </article>
   </slide>
 
+<slide>
+  <hgroup>
+    <h2>Użycie wbudowanego modelu</h2>
+  </hgroup>
+  <article>
+    <pre class="prettyprint" data-lang="python">
+    from django.contrib.auth.models import User
+    </pre>
+    <p>
+        lub
+    </p>
+    <pre class="prettyprint" data-lang="python">
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    </pre>
+  </article>
+</slide>
+
   <slide>
     <hgroup>
-      <h2>Podawanie ścieżki testów</h2>
+      <h2>Funkcja authenticated</h2>
     </hgroup>
-    <article>
-      <ul>
-        <li><code>$ nosetests tests.test_accounts:AccountTestCase.test_recipes_library_other</code></li>
-        <p></p>
-        <li><code>$ py.test tests/test_accounts.py::AccountTestCase::test_recipes_library_other</code></li>
-        <p></p>
-        <li>Uwaga py.test przy opcji -k używa wyrażeń regularnych do znalezienia testów, więc poniższa komenda:</li>
-<code>$ py.test -k "test_recipes_library_other"  tests/test_accounts.py</code>
-<li>uruchomi w tym wypadku testy:</li>
-        <li><code>test_recipes_library_other</code> i</li>
-        <li><code>test_recipes_library_other_with_private</code></li>
+    <article >
+      <pre class="prettyprint" data-lang="python">
+    from django.contrib.auth import authenticate
 
-
-      </ul>
+    user = authenticate(username='john', password='secret')
+    if user is not None:
+        # the password verified for the user
+        if user.is_active:
+            print("User is valid, active and authenticated")
+        else:
+            print("The password is valid, but the account has been disabled!")
+    else:
+        # the authentication system was unable to verify the username and password
+        print("The username and password were incorrect.")
+      </pre>
     </article>
   </slide>
+
+<slide>
+  <hgroup>
+    <h2>Token {CSRF}</h2>
+  </hgroup>
+  <article>
+    <p>
+"Atak ma na celu skłonić użytkownika zalogowanego do serwisu internetowego do tego, aby uruchomił on odnośnik, którego otwarcie wykona w owym serwisie akcję, do której atakujący nie miałby w przeciwnym razie dostępu."
+    </p>
+    <pre class="prettyprint" data-lang="html">
+        < form action="." method="post">{% csrf_token %}
+        < /form>
+    </pre>
+
+  </article>
+</slide>
+
+<slide>
+  <hgroup>
+    <h2>Ustawianie zmiennych w sesji</h2>
+  </hgroup>
+  <article>
+    <p>
+https://docs.djangoproject.com/en/dev/topics/http/sessions/
+    </p>
+    <pre class="prettyprint" data-lang="html">
+
+    </pre>
+
+  </article>
+</slide>
+
+<slide>
+  <hgroup>
+    <h2>Szyfrowanie hasła</h2>
+  </hgroup>
+  <article>
+    <ul>
+    <li>Domyślnie hasła ustawia się za pomocą metody set_password('hasło') na modelu User za pomocą algorytmu PBKDF2 z kluczem SHA256.</li>
+    <li>Inne rodzaje szyfrowań są wspierane, ale potrzebna jest dodatkowa konfiguracja.
+    </li>
+    </ul>
+    <p>
+        Wspiarane typy szyfrowania przez Django
+    </p>
+    <pre class="prettyprint" data-lang="python">
+    PASSWORD_HASHERS = (
+        'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+        'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+        'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+        'django.contrib.auth.hashers.BCryptPasswordHasher',
+        'django.contrib.auth.hashers.SHA1PasswordHasher',
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+        'django.contrib.auth.hashers.CryptPasswordHasher',
+    )
+    </pre>
+  </article>
+</slide>
 
   <!-- <slide hidden>
     Hidden slides are left out of the presentation.
@@ -129,810 +206,20 @@ URL: https://code.google.com/p/io-2012-slides
 
   <slide>
     <hgroup>
-      <h2>Wyświetlanie błędnego wyniku - py.test</h2>
-    </hgroup>
-    <article class="smaller">
-      <pre class="prettyprint" data-lang="test_sample_1.py">
-...
-
-def test_fail():
-    assert 1 != 1</pre>
-      <pre class="prettyprint" data-lang="shell">
-$ py.test test_sample_1.py
-=============================== test session starts ================================
-platform linux2 -- Python 2.7.4 -- pytest-2.5.1
-plugins: cov, xdist
-collected 2 items
-
-testy.py .F
-
-===================================== FAILURES =====================================
-____________________________________ test_fail _____________________________________
-
-    def test_fail():
->       assert 1 != 1
-E       assert 1 != 1
-
-testy.py:6: AssertionError
-======================== 1 failed, 1 passed in 0.01 seconds ========================
-      </pre>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Wyświetlanie błędnego wyniku - nosetests</h2>
-    </hgroup>
-    <article class="smaller">
-      <pre class="prettyprint" data-lang="test_sample_1.py">
-...
-
-def test_fail():
-    assert 1 != 1</pre>
-      <pre class="prettyprint" data-lang="shell">
-$ nosetests test_sample_1.py
-.F
-======================================================================
-FAIL: testy.test_fail
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home/.../site-packages/nose/case.py", line 197, in runTest
-    self.test(*self.arg)
-  File "/home/.../testy.py", line 6, in test_fail
-    assert 1 != 1
-AssertionError
-
-----------------------------------------------------------------------
-Ran 2 tests in 0.001s
-
-FAILED (failures=1)
-      </pre>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Parametryzacja testów</h2>
-    </hgroup>
-    <article>
-      <div class="columns-1">
-      <p>py.test ma bardzo ciekawą funkcjonalność, pozwalająca parametryzować fixtury testów jak i same testy.
-Pozwala to użyć tych samych funkcji testowych dla różnych danych. Jest to przydatne w przypadku testowania np. kilku baz danych lub ustawiania namespace.
-      </p>
-      <pre class="prettyprint" data-lang="test_expectation_2.py">
-import pytest
-
-@pytest.mark.parametrize("input,expected", [
-    ("3+5", 8),
-    ("2+4", 6),
-    ("6*9", 42),
-])
-def test_eval(input, expected):
-    assert eval(input) == expected</pre>
-      <p>Za parametryzacje odpowiada dekorator @pytest.mark.parametrize</p>
-      </div>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Parametryzacja testów</h2>
-    </hgroup>
-    <article class="smaller">
-      <pre class="prettyprint" data-lang="shell">
-      $ py.test test_expectation_2.py
-      =========================== test session starts ============================
-      platform linux2 -- Python 2.7.3 -- pytest-2.5.1
-      collected 3 items
-
-      test_expectation_2.py ..F
-
-      ================================= FAILURES =================================
-      ____________________________ test_eval[6*9-42] _____________________________
-
-      input = '6*9', expected = 42
-
-          @pytest.mark.parametrize("input,expected", [
-              ("3+5", 8),
-              ("2+4", 6),
-              ("6*9", 42),
-          ])
-          def test_eval(input, expected):
-      >       assert eval(input) == expected
-      E       assert 54 == 42
-      E        +  where 54 = eval('6*9')
-
-      test_expectation_2.py:8: AssertionError
-      ==================== 1 failed, 2 passed in 0.01 seconds ====================</pre>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Testy offline i online</h2>
-    </hgroup>
-    <article>
-      <div class="columns-1">
-      <p>@pytest.mark.webtest pozwala na oznaczenie konkretnych testów do uruchomienia.</p>
-      <pre class="prettyprint" data-lang="shell">
-py.test -v -m webtest - tylko oznaczone dekoratorem
-py.test -v -m "not webtest" - inwersja powyższej komendy</pre>
-
-      <pre class="prettyprint" data-lang="test_server.py">
-import pytest
-
-@pytest.mark.webtest
-def test_send_http():
-    pass # perform some webtest test for your app
-
-def test_something_quick():
-    pass
-
-def test_another():
-    pass
-</pre>
-      </div>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Testy offline i online</h2>
-    </hgroup>
-    <article>
-      <div class="columns-1">
-      <pre class="prettyprint" data-lang="shell">
-py.test test_server.py -m webtest
-================================ test session starts =================================
-platform linux2 -- Python 2.7.5 -- py-1.4.20 -- pytest-2.5.2
-plugins: xdist, cov
-collected 3 items
-
-test_server.py .
-======================== 2 tests deselected by "-m 'webtest'" ========================
-======================= 1 passed, 2 deselected in 0.01 seconds =======================
-py.test test_server.py -m "not webtest"
-================================ test session starts =================================
-platform linux2 -- Python 2.7.5 -- py-1.4.20 -- pytest-2.5.2
-plugins: xdist, cov
-collected 3 items
-
-test_server.py ..
-====================== 1 tests deselected by "-m 'not webtest'" ======================
-======================= 2 passed, 1 deselected in 0.01 seconds =======================</pre>
-      </div>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Setup i teardown dla całego modułu</h2>
-    </hgroup>
-    <article>
-      <div class="columns-1">
-      <p>Dla pojedyńczego modułu, który zawiela wiele klasy lub testów można wywołać setup i teardown.
-      </p>
-      <pre class="prettyprint" data-lang="set_tear_down_module_7.py">
-def setup_module(module):
-""" setup any state specific to the execution of the given module."""
-
-def teardown_module(module):
-""" teardown any state that was previously setup with a setup_module
-method.
-"""</pre>
-      </div>
-    <center><img src="images/setup.gif"></img></center>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Obiekt metafunc</h2>
-    </hgroup>
-    <article>
-    <p>Jest dostepny w API pytest-a i pozwala na użycie funkcji 'pytest_generate_tests', która daje możliwość konfiguracji uruchamianych testów.</p>
-      <ul>
-        <li><code>metafunc.fixturenames: Ustawia wymagane argumenty dla funkcji.</code></li>
-        <li><code>metafunc.function: Podstawowa pythonowa testowa funkcja.</code></li>
-        <li><code>metafunc.cls: Obiekt klasy, w których funkcja jest zdefiniowana lub ma wartość None.</code></li>
-        <li><code>metafunc.module: Obiekt modułu gdzie testowa funkcja jest zdefiniowana.</code></li>
-        <li><code>metafunc.config: Dostęp do możlwiych opcji i ogólnej konfiguracji.</code></li>
-        <li><code>metafunc.funcargnames: alias dla fixturenames.</code></li>
-        <li><code>metafunc.addcall: Dodaj nowe wywołanienie do funkcji testu bazowego w fazie kolekcjonowania testów.</code></li>
-      </ul>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Dostosowywanie z linii poleceń</h2>
-    </hgroup>
-    <article>
-    <p>Pozwala na generowanie testów dla profilów, określonych wcześniej parametrem z konsoli.</p>
-    <p>Nazwa pliku 'conftest.py' jest wymagana, aby konfiguracja testów zadziałała.</p>
-      <pre class="prettyprint" data-lang="conftest.py">
-def pytest_addoption(parser):
-    parser.addoption("--stringinput", action="append", default=[],
-    help="list of stringinputs to pass to test functions")
-
-def pytest_generate_tests(metafunc):
-    if 'stringinput' in metafunc.fixturenames:
-        metafunc.parametrize("stringinput", metafunc.config.option.stringinput)</pre>
-
-    <p>Dla powyższego testu, należy przygotować parser definiujący możliwe opcje.</p>
-      <pre class="prettyprint" data-lang="strings_3.py">
-def test_valid_string(stringinput):
-    assert stringinput.isalpha()</pre>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Dostosowywanie z linii poleceń</h2>
-    </hgroup>
-    <article class="smaller">
-    <p>Rezultat testów poprawny</p>
-      <pre class="prettyprint" data-lang="shell">
-$ py.test -q --stringinput="hello" --stringinput="world" test_strings_3.py
-..
-2 passed in 0.01 seconds
-      </pre>
-    <p>i negatywny</p>
-      <pre class="prettyprint" data-lang="shell">
-$ py.test -q --stringinput="!" test_strings_3.py
-F
-================================= FAILURES =================================
-___________________________ test_valid_string[!] ___________________________
-
-stringinput = '!'
-
-    def test_valid_string(stringinput):
->       assert stringinput.isalpha()
-E       assert <built-in method isalpha of str object at 0x2b72934ca198>()
-E        +  where <built-in method isalpha of str object at 0x2b72934ca198> = '!'.isalpha
-
-test_strings_3.py:3: AssertionError
-1 failed in 0.01 seconds</pre>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Testowe scenariusze</h2>
-    </hgroup>
-    <article>
-      <p>Zamiast używania instrukcji 'yield' w testach, twórcy proponują inny sposób tworzenia przejrzystego scenariuszu testowego.</p>
-      <pre class="prettyprint" data-lang="test_scenario_generators_5.py">
-def pytest_generate_tests(metafunc):
-    for scenario in metafunc.cls.scenarios:
-        metafunc.addcall(id=scenario[0], funcargs=scenario[1])
-
-scenario1 = ('basic', {'attribute': 'value'})
-scenario2 = ('advanced', {'attribute': 'value2'})
-
-class TestSampleWithScenarios:
-    scenarios = [scenario1, scenario2]
-
-    def test_demo(self, attribute):
-        assert isinstance(attribute, str)</pre>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Testowe scenariusze</h2>
-
-    </hgroup>
-    <article>
-      <pre class="prettyprint" data-lang="shell">
-$ py.test -v test_scenario_generators_5.py
-
-================================ test session starts ================================
-python: platform linux2 -- Python 2.6.2 -- /usr/bin/python
-test object 1: test_scenario_generators_5.py
-
-test_scenario_generators_5.py:14: TestSampleWithScenarios.test_demo[basic] PASS
-test_scenario_generators_5.py:14: TestSampleWithScenarios.test_demo[advanced] PASS
-
-============================= 2 passed in 0.06 seconds ==============================</pre>
-    <center><img src="images/fly.gif"></img></center>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Fixtury pyttesta</h2>
-    </hgroup>
-    <article>
-      <p>Do dyspozycji jest też różnorodny dobór możliwości stosowania fixtur importowanych jako dekoratory. Można je wykorzystywać za pomocą dekoratora:</p>
-      <ul>
-        <li>@pytest.fixture (opcjonalnie @pytest.fixture(scope="module") gdzie “module” można zamienić na np. “session”, "class") - funkcja ta tworzona jest tylko raz w całym module (lub testowej sesji), testy które wywołają tak udekorowaną funkcje zawsze otrzymają ten sam obiekt.
-        </li>
-        <li>Przydatne jest użycie tej funkcji kiedy wielokrotne użycie jest za bardzo wymagające czasowo np. potrzebne jest kilkukrotnie przetestowanie dostępu.
-        </li>
-      </ul>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>@pytest.fixture</h2>
-    </hgroup>
-    <article class="smaller">
-      <p>Tworzymy funkcje, która ma się wykonywać tylko raz i ją dekorujemy @pytest.fixture.</p>
-      <pre class="prettyprint" data-lang="pytest_fixture_6.py">
-import pytest
-import smtplib
-
-@pytest.fixture(scope="module")
-def smtp():
-    return smtplib.SMTP("ubuntu.pl")
-
-def test_ehlo(smtp):
-    response = smtp.ehlo()
-    assert response[0] == 250
-    assert "pl" in response[1]
-    assert 0  # for demo purposes
-
-def test_noop(smtp):
-    response = smtp.noop()
-    assert response[0] == 250
-    assert 0  # for demo purposes</pre>
-
-      <p>Piszemy testy korzystające z funkcji, łączącej się z protokołem smpt.</p>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>@pytest.fixture</h2>
-    </hgroup>
-    <article class="smaller">
-      <p>Jak widać poniżej smtp ma ten sam adres w pamięci w obydwu testach.</p>
-      <pre class="prettyprint" data-lang="shell">
-________________________________ test_ehlo _________________________________
-smtp = < smtplib.SMTP instance at 0x1af5440>
-
-    def test_ehlo(smtp):
-        response = smtp.ehlo()
-        assert response[0] == 250
-        assert "pl" in response[1]
->       assert 0  # for demo purposes
-E       assert 0
-
-pytest.fixture_6.py:6: AssertionError
-________________________________ test_noop _________________________________
-smtp = < smtplib.SMTP instance at 0x1af5440>
-
-    def test_noop(smtp):
-        response = smtp.noop()
-        assert response[0] == 250
->       assert 0  # for demo purposes
-E       assert 0
-
-pytest.fixture_6.py:11: AssertionError
-========================= 2 failed in 0.17 seconds =========================</pre>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>@pytest.fixture i @pytest.mark.usefixtures</h2>
-    </hgroup>
-    <article class="smaller">
-<p>Przykład jak wykorzystać fixtury do operacji na plikach.</p>
-      <pre class="prettyprint" data-lang="conftest.py">
-import pytest; import tempfile; import os
-
-@pytest.fixture()
-def cleandir():
-  newpath = tempfile.mkdtemp() # '/tmp/tmpKUnnz2'
-  os.chdir(newpath)</pre>
-
-      <pre class="prettyprint" data-lang="test_setenv.py">
-import os
-import pytest
-
-@pytest.mark.usefixtures("cleandir")
-class TestDirectoryInit:
-    def test_cwd_starts_empty(self):
-        assert os.listdir(os.getcwd()) == []
-        with open("myfile", "w") as f:
-            f.write("hello")
-        assert os.listdir(os.getcwd()) == ['myfile']
-
-    def test_cwd_again_starts_empty(self):
-        assert os.listdir(os.getcwd()) == []</pre>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>@pytest.yield_fixture</h2>
-    </hgroup>
-    <article>
-      <p>Możliwe jest też korzystanie z instrukcji yield w testach.</p>
-      <pre class="prettyprint" data-lang="test_yield_8.py">
-import pytest
-
-@pytest.yield_fixture
-def passwd():
-    print ("\nsetup before yield")
-    f = open("/etc/passwd")
-    yield f.readlines()
-    print ("teardown after yield")
-    f.close()
-
-def test_has_lines(passwd):
-    print ("test called")
-    assert passwd</pre>
-      <p>Bez dekoratora @pytest.yield_fixture funkcja się nie wykona.</p>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>@pytest.yield_fixture</h2>
-    </hgroup>
-    <article class="smaller">
-      <p>lub dodatkowo za pomocą “with”</p>
-      <pre class="prettyprint" data-lang="test_yield_8_2.py">
-import pytest
-
-@pytest.yield_fixture
-def passwd():
-    with open("/etc/passwd") as f:
-        yield f.readlines()
-
-def test_has_lines(passwd):
-    assert len(passwd) >= 1</pre>
-      <pre class="prettyprint" data-lang="shell">
-$ py.test -q -s test_yield.py
-
-setup before yield
-test called
-.teardown after yield
-
-1 passed in 0.00 seconds</pre>
-      <p>Testy w tym wypadku, oznaczone dekoratorem @pytest.yield_fixture przyjmują jako argument funkcję.</p>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Używanie instrukcji print do debagowania testu</h2>
-    </hgroup>
-    <article>
-      <pre class="prettyprint" data-lang="print_9.py">
-def setup_function(function):
-    print ("setting up %s" % function)
-
-def test_func1():
-    assert True
-
-def test_func2():
-    assert False</pre>
-    <center><img src="images/read.gif"></img></center>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Używanie instrukcji print do debugowania testu</h2>
-    </hgroup>
-    <article>
-      <p>py.test wyświetla printy w testach, gdy test się nie powiedzie.</p>
-      <pre class="prettyprint" data-lang="shell">
-$ py.test print_9.py
-=========================== test session starts ============================
-platform linux2 -- Python 2.7.3 -- pytest-2.5.1
-collected 2 items
-print_9.py .F
-================================= FAILURES =================================
-________________________________ test_func2 ________________________________
->
-E
-def test_func2():
-assert False
-assert False
-print_9.py:9: AssertionError
------------------------------ Captured stdout ------------------------------
-setting up < function test_func2 at 0x1eb37d0>
-==================== 1 failed, 1 passed in 0.01 seconds ====================</pre>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Przechwycenie outputu testowej funkcji</h2>
-    </hgroup>
-    <article>
-      <p>W argumentach testowej funkcji wymagany jest 'capsys'.</p>
-      <pre class="prettyprint" data-lang="output_10.py">
-import sys
-
-def test_myoutput(capsys):
-    print ("hello")
-    sys.stderr.write("world\n")
-    out, err = capsys.readouterr()
-
-    assert out == "hello\n"
-    assert err == "world\n"
-
-    print "next"
-    out, err = capsys.readouterr()
-
-    assert out == "next\n"</pre>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Wykrywanie testów</h2>
-    </hgroup>
-    <article>
-      <p>Nose</p>
-      <ul>
-        <li>Używa wyrażeń regularnych do określania testu.</li>
-      </ul>
-      <p>py.tests</p>
-      <ul>
-        <li>Posiada osobny plik konfiguracyjny określając co jest klasą,  a co funkcją.</li>
-        <li>Bazuje na zmiennych globalnych w pliku (trzeba uważać na nazwy zmiennych globalnych w testach).</li>
-        <center><img src="images/detect.gif"></img></center>
-      </ul>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Przykład konfliktu w py.test</h2>
-    </hgroup>
-    <article>
-      <p>Globalnie definiowanie</p>
-      <pre class="prettyprint" data-lang="key_auth/tests/test_api.py">
-test_app = webapp2.WSGIApplication(
-    [('/test/', Handler)],
-    debug=True,
-    config=DEFAULT_CONFIG
-)</pre>
-<p>Po wypisaniu zmiennych globalnych globals(), zmienna</p>
-<pre class="prettyprint" data-lang="globals">
-'test_app': < webapp2.WSGIApplication object at 0x42bebd0></pre>
-<p>była obiektem wykorzystywanym globalnie i miała w nazwie “test_”, co powodowało przerwanie wykonywanych testów bez jakiejkolwiek informacji.</p>
-<p>Na nosetests-cie konflikt nie występował, test musiał być funkcją lub metodą.</p>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Przykład konfliktu w py.test</h2>
-    </hgroup>
-    <article>
-      <p>Poprawna wersja</p>
-      <pre class="prettyprint" data-lang="key_auth/tests/test_api.py">
-class JsonPBTest(KITest):
-    APPLICATION = webapp2.WSGIApplication(
-        [('/test/', Handler)],
-        debug=True,
-        config=DEFAULT_CONFIG
-    )</pre>
-      <pre class="prettyprint" data-lang="Pdb">
-(Pdb) APPLICATION
-< webapp2.WSGIApplication object at 0x5274fd0></pre>
-<p>w zmiennych globalnych jest tylko klasa</p>
-      <pre class="prettyprint" data-lang="globals">
-'JsonPBTest': < class='tests.test_api.JsonPBTest'></pre>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Sprawdzone pluginy py.test - pytest-xdist</h2>
-    </hgroup>
-    <article>
-      <p>Pozwala na uruchamianie w osobnych procesach: </p>
-      <pre class="prettyprint" data-lang="shell">
-py.test -n NUM</pre>
-      <p>Zalecana ilość procesów dla NUM: NUM = Ilość rdzeni procesora - 1</p>
-      <p>oraz izolacje procesów testów, (używana pamięć jest zwalniana po każdym teście) zapobiegająca unicestwieniu przez system: </p>
-      <pre class="prettyprint" data-lang="shell">
-py.test -n NUM --boxed</pre>
-      <p>W ‘nose’ nie istnieje możliwość zwalniania pamięci tylko ustawienia timeouta na czas wykonywania testu, co powoduje gromadzenie pamięci w testach i usuwanie tych długo wykonywanych co nie jest właściwe.</p>
-      <p>Obie opcje można łączyć. Rozsądne użycie sprawia, że testy trwające około 66 procent krócej np. z 15 do 5 minut.</p>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Kolejny feature xdist</h2>
-    </hgroup>
-    <article>
-      <p>Pozwala na ponowne uruchamianie całego. Jeśli mamy błąd w assercji, możemy na bieżąco podglądać wynik, gdy plik ulegnie zmianie. </p>
-      <pre class="prettyprint" data-lang="shell">
-py.test --looponfail</pre>
-    <center><img src="images/loop.gif"></img></center>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Kilka innych pluginów do pytesta</h2>
-    </hgroup>
-    <article>
-        <ul>
-          <li>Umożliwia uruchamianie tylko failujących testów z całej serii</li>
-          <li><pre class="prettyprint">
-pytest-cache</pre></li>
-          <li>Testowanie popularnych freameworków ze wszystkim możliwościami py.test'a</li>
-          <li><pre class="prettyprint">
-pytest-django, pytest_pyramid</pre></li>
-          <li>Generowanie losowej zawartości do testów</li>
-          <li><pre class="prettyprint">
-pytest-quickcheck</pre></li>
-        </ul>
-    </article>
-  </slide>
-
-
-  <slide>
-    <hgroup>
-      <h2>py.testa w buildout-cie</h2>
-    </hgroup>
-    <article>
-      <p>Dodanie samego plugina nie jest problemem. Dodajemy nowy wpis.</p>
-      <pre class="prettyprint" data-lang="buildout.cfg">
-[buildout]
-parts =
-    ...
-    pytests
-    ...
-    </pre>
-    <center><img src="images/buildout.gif"></img></center>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>py.testa w buildout-cie</h2>
-    </hgroup>
-    <article>
-      <p>Definicja sekcji 'pytests' do tego samego pliku.</p>
-      <pre class="prettyprint" data-lang="buildout.cfg">
-[pytests]
-recipe = zc.recipe.egg:script
-extra-paths =
-    ${gae_tools:sdk-directory}
-scripts =
-    py.test
-eggs =
-    ${config:requirements}
-    nose
-    pytest-cov
-    pytest</pre>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>py.testa w buildout-cie + pytest-xdist</h2>
-    </hgroup>
-    <article class="smaller">
-      <p>Dodatkowo wymagane jest tu obsłużenie błędu.</p>
-      <pre class="prettyprint" data-lang="buildout.cfg">
-[pytests]
-recipe = zc.recipe.egg:script
-extra-paths =
-    ${gae_tools:sdk-directory}
-scripts =
-    py.test
-eggs =
-    ${config:requirements}
-    nose
-    setuptools
-    pytest-xdist
-    pytest-cov
-    pytest
-interpreter = py
-initialization =
-    try:
-        sys.argv.remove('-u')
-    except ValueError:
-        pass
-    import sys, os
-    unbuffered = os.fdopen(sys.stdout.fileno(), 'w', 0)
-    sys.stdout = unbuffered</pre>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>py.testa w buildout-cie</h2>
-    </hgroup>
-    <article>
-      <p>Aby uruchomić testy potrzebujemy tylko komendy</p>
-      <pre class="prettyprint" data-lang="bash">
-./bin/py.test tests/ </pre>
-      <p>lub z dodanym parametrem, aby skorzystać z kilku procesorów.</p>
-      <pre class="prettyprint" data-lang="bash">
-./bin/py.test tests/ --tx='3*popen//python=bin/py' --dist=load</pre>
-    </article>
-  </slide>
-
-<!-- KONIEC -->
-
-  <slide>
-    <hgroup>
-      <h2>Dodatkowe popularne opcje nosetest vs py.test</h2>
-    </hgroup>
-    <article>
-        <ul>
-          <li>Dokładniejszy opis:</li>
-          <li><pre class="prettyprint">
---verbosity=2 -v</pre></li>
-          <li>Najwolniejsze testy</li>
-          <li><pre class="prettyprint">
---with-openstack --durations=10</pre></li>
-          <li>Pokrycie</li>
-          <li><pre class="prettyprint">
---with-cov --cov</pre></li>
-          <li>Format xml</li>
-          <li><pre class="prettyprint">
---with-xunit --junitxml</pre></li>
-        </ul>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>W skrócie - Nosetests</h2>
-    </hgroup>
-    <article>
-      <pre data-lang="plusy">
-Duża ilość pluginów</pre>
-      <pre data-lang="minusy">
-Spora część z pluginów nie działa
-Ponoć działa z python 3, ale większość pluginów tylko dla 2.x.
-Brak dalszego rozwoju</pre>
-      <center><img src="images/stop.gif"></img></center>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>W skrócie - py.test</h2>
-    </hgroup>
-    <article>
-      <pre data-lang="plusy">
-Duża społeczność wokół projektu
-Eleganckie i idiomatyczne podejście np. pokazywanie wyniku assercji (porównania różnic)
-Wspiera Python 2.5-3.3
-Lepsza dokumentacja
-Nieco większe możliwości konfiguracji, bez sięgania do pluginów</pre>
-      <pre data-lang="minusy">
-py.testowe dodatki wymagają ingerowania w kod</pre>
-      <center><img src="images/start.gif"></img></center>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
       <h2>Dalsze informacje</h2>
     </hgroup>
     <article>
-<li><p><b>Pełna dokumentacja py.testa (prawie 200 stron)</b> - http://pytest.org/latest/pytest.pdf</p></li>
-<li><p>Porównanie nose i py.testa na stronie Fedory (podobieństwa i różnice) - http://fedoraproject.org/wiki/User:Tflink/AutoQA_nose_pytest_comparison</p></li>
-<li><p>Zbiór dostępnych narzędzi testowych pythona, niestety mało aktualny - https://wiki.python.org/moin/PythonTestingToolsTaxonomy</p></li>
-<li><p>Aktywny kanał dla użytkowników #pylib na irc.freenode.net IRC</p></li>
-<li><p>Prezentacja na PyConie 2012 na temat py.testa </p>
-<p><a herf=http://www.youtube.com/watch?v=9LVqBQcFmyw>http://www.youtube.com/watch?v=9LVqBQcFmyw</a></p></li>
+        <ul>
+            <li><p><b>Pełna dokumentacja django</b> -  docs.djangoproject.com/en/dev</p></li>
+            <li><p><b>Przykładowa aplikacja</b> -  github.com/MateuszG/django_auth_example</p></li>
+        </ul>
     </article>
   </slide>
 
   <slide class="thank-you-slide segue nobackground">
     <aside class="gdbar right"><img src="images/google_developers_icon_128.png"></aside>
     <article class="flexbox vleft auto-fadein">
-      <h2>&lt;Dziękuję wam!&gt;</h2>
+      <h2>&lt;Dziękuję!&gt;</h2>
       <!-- <p>Important contact information goes here.</p> -->
       <!-- <p>Informacje kontaktowe</p> -->
     </article>
