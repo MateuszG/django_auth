@@ -171,12 +171,6 @@ której atakujący nie miałby w przeciwnym razie dostępu."
     <h2>Ustawianie zmiennych w cookie i sesji</h2>
   </hgroup>
   <article>
-    <p>
-        Domyślnie, Django przechowuje sesje w bazie danych, przy użyciu modelu:
-    </p>
-    <pre class="prettyprint" data-lang="python">
-        'django.contrib.sessions.models.Session'</pre>
-    <p>
     Ustawianie cookie odbywa się na obiekcie <b>response</b>
     </p>
     <pre class="prettyprint" data-lang="python">
@@ -199,7 +193,7 @@ której atakujący nie miałby w przeciwnym razie dostępu."
   </hgroup>
   <article>
     <ul>
-    <li>Domyślnie hasła ustawia się za pomocą metody set_password('hasło') na modelu User za pomocą algorytmu PBKDF2 z kluczem SHA256.</li>
+    <li>Domyślnie hasła ustawia się za pomocą metody <b>set_password('hasło')</b> na modelu User za pomocą algorytmu PBKDF2 z kluczem SHA256.</li>
     <li>Inne rodzaje szyfrowań są wspierane, ale potrzebna jest dodatkowa konfiguracja.
     </li>
     </ul>
@@ -232,7 +226,7 @@ której atakujący nie miałby w przeciwnym razie dostępu."
         <ul>
             <li><p><b>Pełna dokumentacja django</b> -  docs.djangoproject.com/en/dev</p></li>
             <li><p><b>Przykładowa aplikacja</b> -  github.com/MateuszG/django_auth_example</p></li>
-            <li><p><b>Prezentacja aplikacja</b> -  galganek.name/django_auth</p></li>
+            <li><p><b>Prezentacja aplikacji</b> -  galganek.name/django_auth</p></li>
         </ul>
     </article>
   </slide>
