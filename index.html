@@ -84,7 +84,7 @@ URL: https://code.google.com/p/io-2012-slides
         'django.contrib.admin',
         <b>'django.contrib.auth',</b>
         'django.contrib.contenttypes',
-        'django.contrib.sessions',
+        <b>'django.contrib.sessions',</b>
         'django.contrib.messages',
         'django.contrib.staticfiles',
     )
@@ -104,7 +104,7 @@ URL: https://code.google.com/p/io-2012-slides
 
 <slide>
   <hgroup>
-    <h2>Użycie wbudowanego modelu</h2>
+    <h2>Użycie wbudowanego modelu użytkownika</h2>
   </hgroup>
   <article>
     <pre class="prettyprint" data-lang="python">
@@ -148,7 +148,15 @@ URL: https://code.google.com/p/io-2012-slides
   </hgroup>
   <article>
     <p>
-"Atak ma na celu skłonić użytkownika zalogowanego do serwisu internetowego do tego, aby uruchomił on odnośnik, którego otwarcie wykona w owym serwisie akcję, do której atakujący nie miałby w przeciwnym razie dostępu."
+        Używanie tokenu {CSRF} ma uchronić użytkownika przed:
+    </p>
+    <p>
+"Atakiem mającym na celu skłonienie użytkownika zalogowanego do serwisu internetowego do tego,
+aby uruchomił on odnośnik, którego otwarcie wykona w owym serwisie akcję, do
+której atakujący nie miałby w przeciwnym razie dostępu."
+    </p>
+    <p>
+        <i>pl.wikipedia.org</i>
     </p>
     <pre class="prettyprint" data-lang="html">
         < form action="." method="post">{% csrf_token %}
@@ -160,16 +168,28 @@ URL: https://code.google.com/p/io-2012-slides
 
 <slide>
   <hgroup>
-    <h2>Ustawianie zmiennych w sesji</h2>
+    <h2>Ustawianie zmiennych w cookie i sesji</h2>
   </hgroup>
   <article>
     <p>
-https://docs.djangoproject.com/en/dev/topics/http/sessions/
+        Domyślnie, Django przechowuje sesje w bazie danych, przy użyciu modelu:
     </p>
-    <pre class="prettyprint" data-lang="html">
-
-    </pre>
-
+    <pre class="prettyprint" data-lang="python">
+        'django.contrib.sessions.models.Session'</pre>
+    <p>
+    Ustawianie cookie odbywa się na obiekcie <b>response</b>
+    </p>
+    <pre class="prettyprint" data-lang="python">
+        def language(request, lang='en'):
+            response = HttpResponse('setting language to {}'.format(lang))
+            response.set_cookie('lang', lang)</pre>
+    <p>
+    Natomiast zmiany w sesji dotyczą <b>requesta</b>
+    </p>
+    <pre class="prettyprint" data-lang="python">
+        def language(request, lang='en'):
+            response = HttpResponse('setting language to {}'.format(lang))
+            request.session['lang'] = lang</pre>
   </article>
 </slide>
 
@@ -212,6 +232,7 @@ https://docs.djangoproject.com/en/dev/topics/http/sessions/
         <ul>
             <li><p><b>Pełna dokumentacja django</b> -  docs.djangoproject.com/en/dev</p></li>
             <li><p><b>Przykładowa aplikacja</b> -  github.com/MateuszG/django_auth_example</p></li>
+            <li><p><b>Prezentacja aplikacja</b> -  galganek.name/django_auth</p></li>
         </ul>
     </article>
   </slide>
