@@ -1,7 +1,7 @@
 var SLIDE_CONFIG = {
   // Slide settings
   settings: {
-    title: 'Autoryzacja i sesja',
+    title: 'Autoryzacja, sesja i cookies',
     subtitle: 'w Django',
     //eventInfo: {
     //  title: 'Google I/O',
